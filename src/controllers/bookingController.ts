@@ -2,6 +2,7 @@ import { Request, Response } from "express";
 import { createBooking, getBookings } from "../services/bookingService";
 import { isAvailable } from "../services/availabilityService";
 import { quote } from "../services/bookingPricingService";
+import { buildReport } from "../services/bookingReportService";
 
 export function postBooking(req: Request, res: Response): void {
   const booking = createBooking({
@@ -24,4 +25,8 @@ export function getAvailability(req: Request, res: Response): void {
 export function postQuote(req: Request, res: Response): void {
   const totalCents = quote(Number(req.body.durationMinutes));
   res.json({ totalCents });
+}
+
+export function getReport(_req: Request, res: Response): void {
+  res.json(buildReport());
 }
