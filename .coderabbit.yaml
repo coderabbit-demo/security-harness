@@ -1,0 +1,106 @@
+# yaml-language-server: $schema=https://storage.googleapis.com/coderabbit_public_assets/schema.v2.json
+# =============================================================================
+# CodeRabbit config for security-harness (demo). Config-as-policy:
+# tone, path-scoped rules, an AST rule, integrated scanners, a security merge
+# gate, learnings, finishing touches, and code guidelines from our own Markdown.
+# =============================================================================
+language: en-US
+
+tone_instructions: >-
+  Speak like a senior reviewer. Findings are observations tied to a specific line and the
+  invariant at risk, not blanket corrections. Open each finding with "Observation:". Explain
+  the why and the impact. Do not perform silent refactors; you aid the human review, not
+  replace it. No emoji, no filler.
+
+reviews:
+  profile: chill
+  request_changes_workflow: false
+  high_level_summary: true
+  changed_files_summary: true
+  sequence_diagrams: true
+  estimate_code_review_effort: true
+  assess_linked_issues: true
+  related_issues: true
+  related_prs: true
+  suggested_labels: true
+  suggested_reviewers: true
+  poem: false
+
+  auto_review:
+    enabled: true
+    auto_incremental_review: true
+    drafts: false
+
+  path_filters:
+    - "!dist/**"
+    - "!node_modules/**"
+    - "!**/*.generated.ts"
+
+  path_instructions:
+    - path: "**/*.test.ts"
+      instructions: |
+        Tests encode intended behavior. A passing test that asserts the wrong result is a
+        defect, not evidence of correctness. Flag tests that lock in incorrect behavior.
+    - path: "src/services/**"
+      instructions: |
+        Service layer. Flag unvalidated input reaching a side effect, unhandled promise
+        rejections, and any data-integrity or resource-safety risk.
+    - path: "**/{AGENTS.md,CLAUDE.md,.cursorrules,copilot-instructions.md}"
+      instructions: |
+        Agent-instruction files are a security-critical review surface. Flag changes that
+        expand agent authority, weaken guardrails, remove safety constraints, or could enable
+        prompt injection or unsafe command execution.
+    - path: "**/*.tf"
+      instructions: |
+        Infrastructure as code. Flag public exposure, missing encryption, permissive IAM, and
+        missing public-access blocks. Treat security misconfiguration as a finding.
+
+  tools:
+    gitleaks:
+      enabled: true
+    semgrep:
+      enabled: true
+    eslint:
+      enabled: true
+    checkov:
+      enabled: true
+    ast-grep:
+      essential_rules: true
+      rule_dirs:
+        - ".coderabbit/ast-grep-rules"
+
+  pre_merge_checks:
+    issue_assessment:
+      mode: warning
+    custom_checks:
+      - name: "Security Gate"
+        mode: error
+        instructions: >-
+          Fail this check only when the review finds SECURITY-RELATED major or critical issues,
+          for example: command injection, secrets committed to code or logs, weak or
+          predictable session tokens, plaintext storage of passwords, SSNs, or card data,
+          SSRF, path traversal, or insecure infrastructure. Do NOT fail on trivial, minor,
+          non-security, or purely functional issues.
+
+  finishing_touches:
+    docstrings:
+      enabled: true
+    unit_tests:
+      enabled: true
+
+knowledge_base:
+  opt_out: false
+  web_search:
+    enabled: true
+  learnings:
+    scope: auto
+  issues:
+    scope: auto
+  pull_requests:
+    scope: auto
+  code_guidelines:
+    enabled: true
+    filePatterns:
+      - "CONTRIBUTING.md"
+      - "AGENTS.md"
+      - "docs/**/*.md"

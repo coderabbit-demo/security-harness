@@ -1,11 +1,7 @@
-import express from "express";
+import { createApp } from "./app";
 
-const app = express();
 const port = process.env.PORT ?? 3000;
-
-app.get("/", (_req, res) => {
-  res.send("Hello World");
-});
+const app = createApp();
 
 app.listen(port, () => {
   console.log(`Listening on ${port}`);
