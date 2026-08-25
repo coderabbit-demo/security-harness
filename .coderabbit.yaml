@@ -7,10 +7,9 @@
 language: en-US
 
 tone_instructions: >-
-  Speak like a senior reviewer. Findings are observations tied to a specific line and the
-  invariant at risk, not blanket corrections. Open each finding with "Observation:". Explain
-  the why and the impact. Do not perform silent refactors; you aid the human review, not
-  replace it. No emoji, no filler.
+  Speak like a senior reviewer. Open each finding with "Observation:" and tie it to the exact
+  line and the invariant at risk. Explain the why and the impact. No silent refactors, no
+  emoji, no filler. You aid the human review, not replace it.
 
 reviews:
   profile: chill
