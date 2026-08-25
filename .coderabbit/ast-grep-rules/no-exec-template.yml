@@ -1,0 +1,19 @@
+id: no-exec-template
+language: typescript
+severity: error
+message: >-
+  Observation: shell execution with an interpolated template literal is a command-injection
+  sink (CWE-78). Build the command with execFile("cmd", [args]) so arguments cannot be
+  interpreted by a shell.
+note: Matches child_process exec and execSync called with a template literal argument.
+rule:
+  kind: call_expression
+  all:
+    - has:
+        field: function
+        regex: "^(exec|execSync)$"
+    - has:
+        field: arguments
+        has:
+          kind: template_string
+          stopBy: end
