@@ -1,6 +1,6 @@
 # security-harness
 
-Minimal Express + TypeScript app used as the **single-repo fixture for the CodeRabbit "First Demo" runbook**. Not for production. Every demo use case is a pull request in this repo (plus two companion repos for the cross-repo cases). All demo PRs carry the **`Demo - Do Not Merge`** label and a second label naming the use case they represent.
+Minimal Express + TypeScript app used as the **primary repository fixture for the CodeRabbit "First Demo" runbook**. Not for production. Most demo use cases are pull requests in this repo; the runbook also covers a local-only branch (UC1), an external pull request (UC9), and two companion repos for the cross-repo cases (UC10 / UC11). Every demo PR here carries the **`Demo - Do Not Merge`** label plus a second label naming the use case it represents.
 
 ## Demo use cases by PR
 
