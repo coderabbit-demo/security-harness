@@ -103,3 +103,18 @@ knowledge_base:
       - "CONTRIBUTING.md"
       - "AGENTS.md"
       - "docs/**/*.md"
+      # Cross-repo: shared org standards live in a separate repo. CodeRabbit reads
+      # these from coderabbit-standards' default branch (owner/repo:path syntax), so
+      # findings in THIS repo can cite a guideline that isn't stored here.
+      - "coderabbit-demo/coderabbit-standards:guidelines/**/*.md"
+
+  # Multi-repo awareness: link the downstream consumer so a change to this service's
+  # public API surfaces its breaking impact (exact files + lines) before merge.
+  automatic_repository_linking: true
+  linked_repositories:
+    - repository: "coderabbit-demo/security-harness-consumer"
+      instructions: >-
+        Downstream consumer of this service's HTTP API and shared TypeScript types. When a
+        PR here changes an exported endpoint, route path, request/response shape, or an
+        exported type, check whether it breaks call sites in that repo and surface the exact
+        files and lines affected.
