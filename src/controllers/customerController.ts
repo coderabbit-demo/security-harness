@@ -1,7 +1,18 @@
 import { Request, Response } from "express";
-import { startSession } from "../services/customerService";
+import { findCustomer } from "../models/customer";
 
-export function postSession(req: Request, res: Response): void {
-  const { email } = req.body ?? {};
-  res.status(201).json(startSession({ email }));
+export function getCustomer(req: Request, res: Response): void {
+  const id = Number(req.params.id);
+  if (!Number.isInteger(id) || id <= 0) {
+    res.status(400).send("invalid id");
+    return;
+  }
+
+  const customer = findCustomer(id);
+  if (!customer) {
+    res.status(404).send("not found");
+    return;
+  }
+
+  res.json(customer);
 }

@@ -3,10 +3,11 @@ export interface Customer {
   email: string;
 }
 
-const store: Customer[] = [];
+const store: Customer[] = [
+  { id: 1, email: "ada@example.com" },
+  { id: 2, email: "grace@example.com" },
+];
 
-export function insertCustomer(input: { email: string }): Customer {
-  const customer: Customer = { id: store.length + 1, email: input.email };
-  store.push(customer);
-  return customer;
+export function findCustomer(id: number): Customer | undefined {
+  return store.find((c) => c.id === id);
 }
