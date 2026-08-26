@@ -108,9 +108,10 @@ knowledge_base:
       # findings in THIS repo can cite a guideline that isn't stored here.
       - "coderabbit-demo/coderabbit-standards:guidelines/**/*.md"
 
-  # Multi-repo awareness: link the downstream consumer so a change to this service's
-  # public API surfaces its breaking impact (exact files + lines) before merge.
-  automatic_repository_linking: true
+  # Multi-repo awareness. We do NOT rely on auto-discovery; the downstream consumer is
+  # linked explicitly so a change to this service's public API surfaces its breaking
+  # impact (exact files + lines) before merge, deterministically.
+  automatic_repository_linking: false
   linked_repositories:
     - repository: "coderabbit-demo/security-harness-consumer"
       instructions: >-
