@@ -10,8 +10,16 @@ export interface PriceQuote {
   totalCents: number;
 }
 
-// Bulk discount: 10% off for orders of MORE THAN 5 items. Money is integer cents;
-// never a float or a floating-point multiplier. Round once, at the boundary, in cents.
+// Upper bound on an accepted subtotal so the discount arithmetic stays within the
+// safe-integer range: subtotalCents * 90 must not exceed Number.MAX_SAFE_INTEGER.
+// $1,000,000,000.00 expressed in integer cents.
+export const MAX_SUBTOTAL_CENTS = 100_000_000_000;
+
+/**
+ * Compute a price quote. Money is integer cents; the 10%-off bulk discount (for
+ * orders of more than five items) is rounded once, at the boundary, in cents.
+ * Callers must reject subtotals above {@link MAX_SUBTOTAL_CENTS} before calling.
+ */
 export function quote(input: QuoteInput): PriceQuote {
   const { subtotalCents, itemCount } = input;
   const totalCents =
