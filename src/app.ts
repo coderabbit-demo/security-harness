@@ -6,7 +6,7 @@ import { customersRouter } from "./routes/customers";
 /**
  * Wire the Express app. Requests flow route -> controller -> service. Mounts the
  * health routes at the root, the pricing API under /api/pricing, and the customer
- * session API under /api/customers.
+ * lookup API under /api/customers.
  */
 export function createApp(): Express {
   const app = express();
