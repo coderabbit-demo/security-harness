@@ -7,9 +7,7 @@
 language: en-US
 
 tone_instructions: >-
-  Speak like a senior reviewer. Open each finding with "Observation:" and tie it to the exact
-  line and the invariant at risk. Explain the why and the impact. No silent refactors, no
-  emoji, no filler. You aid the human review, not replace it.
+  Speak like a senior reviewer. Open each finding with "Observation:" and tie it to the exact line and the invariant at risk. Explain the why and the impact. No silent refactors, no emoji, no filler. You aid the human review, not replace it.
 
 reviews:
   profile: chill
@@ -53,6 +51,20 @@ reviews:
       instructions: |
         Infrastructure as code. Flag public exposure, missing encryption, permissive IAM, and
         missing public-access blocks. Treat security misconfiguration as a finding.
+    - path: src/routes/
+      instructions: Keep route modules limited to Express router construction and HTTP verb/path bindings. Delegate request handling to named controller functions; do not add validation, business logic, or response construction in route files.
+    - path: src/controllers/
+      instructions: "Keep controllers as request/response adapters: validate raw request values without coercion before invoking a service, return HTTP 400 for malformed input, delegate business computation to services, and shape the HTTP response there. Use explicit early returns after sending error responses."
+    - path: src/services/
+      instructions: Keep services framework-agnostic and expose typed functions and interfaces rather than Express request/response handlers. Keep side effects and business computation in this layer, while preserving validation and resource-safety invariants at the service boundary.
+    - path: src/services/pricing*.ts
+      instructions: Represent monetary values as integer cents and preserve the established pricing response contract and field names. Keep discount arithmetic within safe integer bounds and document or enforce the invariant that callers must satisfy before pricing computation.
+    - path: src/**/*.ts
+      instructions: "Maintain strict TypeScript and lint compatibility: do not use explicit any, eval, or loose equality; type request/response and domain values explicitly; and prefix intentionally unused function parameters with an underscore."
+    - path: src/app.ts
+      instructions: "Use createApp() as the Express composition root: register shared middleware and mount routers there, but keep process startup and app.listen() in the entrypoint."
+    - path: src/index.ts
+      instructions: Keep the process entrypoint limited to reading runtime configuration, creating the app, and starting the HTTP listener; do not place routing or business logic here.
 
   tools:
     gitleaks:
@@ -75,11 +87,7 @@ reviews:
       - name: "Security Gate"
         mode: error
         instructions: >-
-          Fail this check only when the review finds SECURITY-RELATED major or critical issues,
-          for example: command injection, secrets committed to code or logs, weak or
-          predictable session tokens, plaintext storage of passwords, SSNs, or card data,
-          SSRF, path traversal, or insecure infrastructure. Do NOT fail on trivial, minor,
-          non-security, or purely functional issues.
+          Fail this check only when the review finds SECURITY-RELATED major or critical issues, for example: command injection, secrets committed to code or logs, weak or predictable session tokens, plaintext storage of passwords, SSNs, or card data, SSRF, path traversal, or insecure infrastructure. Do NOT fail on trivial, minor, non-security, or purely functional issues.
 
   finishing_touches:
     docstrings:
@@ -115,7 +123,4 @@ knowledge_base:
   linked_repositories:
     - repository: "coderabbit-demo/security-harness-consumer"
       instructions: >-
-        Downstream consumer of this service's HTTP API and shared TypeScript types. When a
-        PR here changes an exported endpoint, route path, request/response shape, or an
-        exported type, check whether it breaks call sites in that repo and surface the exact
-        files and lines affected.
+        Downstream consumer of this service's HTTP API and shared TypeScript types. When a PR here changes an exported endpoint, route path, request/response shape, or an exported type, check whether it breaks call sites in that repo and surface the exact files and lines affected.
