@@ -25,6 +25,24 @@ reviews:
   suggested_reviewers: true
   poem: false
 
+  # Risk taxonomy: CodeRabbit suggests (and applies) one risk label per PR from prose
+  # rules; the mutually-exclusive group prevents a PR being tagged more than one risk.
+  auto_apply_labels: true
+  labeling_instructions:
+    - label: "risk:high"
+      instructions: >-
+        Apply when the PR changes authentication, authorization, secrets, session tokens,
+        or the handling of passwords, SSNs, or payment/card/PII data.
+    - label: "risk:medium"
+      instructions: >-
+        Apply for application-logic changes with moderate blast radius (pricing, bookings,
+        service-layer behavior) that are not security-sensitive.
+    - label: "risk:low"
+      instructions: >-
+        Apply for docs, tests, configuration, or comment-only changes with no runtime effect.
+  mutually_exclusive_groups:
+    risk: ["risk:high", "risk:medium", "risk:low"]
+
   auto_review:
     enabled: true
     auto_incremental_review: true
