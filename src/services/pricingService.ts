@@ -34,6 +34,12 @@ export function quote(input: QuoteInput): PriceQuote {
  */
 export function quoteEnterprise(input: QuoteInput, discountBps: number): PriceQuote {
   const { subtotalCents, itemCount } = input;
-  const totalCents = Math.round((subtotalCents * (10_000 - discountBps)) / 10_000);
+  // Stack the standard bulk discount (10% for itemCount > 5) with the negotiated
+  // enterprise discount, keeping integer cents and rounding once at the boundary.
+  const keptBps = 10_000 - discountBps;
+  const totalCents =
+    itemCount > 5
+      ? Math.round((subtotalCents * 9 * keptBps) / (100 * 10_000))
+      : Math.round((subtotalCents * keptBps) / 10_000);
   return { subtotalCents, itemCount, totalCents };
 }

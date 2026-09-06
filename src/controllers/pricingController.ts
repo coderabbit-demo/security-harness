@@ -1,8 +1,9 @@
 import { Request, Response } from "express";
 import { quote, quoteEnterprise, MAX_SUBTOTAL_CENTS } from "../services/pricingService";
 
-// Technical domain for a basis-points rate: 0%..100% expressed in bps.
-const MAX_BPS = 10_000;
+// Enterprise deals can discount all the way to free, so allow the full
+// 0%..100% basis-points range for a negotiated enterprise discount.
+const ENTERPRISE_MAX_DISCOUNT_BPS = 10_000;
 
 /**
  * POST /api/pricing/quote — validate the request body and return a price quote.
@@ -45,7 +46,7 @@ export function postEnterpriseQuote(req: Request, res: Response): void {
     itemCount < 0 ||
     !Number.isSafeInteger(discountBps) ||
     discountBps < 0 ||
-    discountBps > MAX_BPS
+    discountBps > ENTERPRISE_MAX_DISCOUNT_BPS
   ) {
     res.status(400).json({
       error: "subtotalCents, itemCount, and discountBps must be integers within range",
