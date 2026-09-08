@@ -13,7 +13,10 @@ tone_instructions: >-
 
 reviews:
   profile: chill
-  request_changes_workflow: false
+  # Gated approval: CodeRabbit posts a "Request changes" review and only approves once
+  # its comments are resolved, the latest commit is reviewed, and no pre-merge check is
+  # failing. Turns CodeRabbit into a blocking reviewer instead of a commenter.
+  request_changes_workflow: true
   high_level_summary: true
   changed_files_summary: true
   sequence_diagrams: true
