@@ -13,7 +13,11 @@ tone_instructions: >-
 
 reviews:
   profile: chill
-  request_changes_workflow: false
+  # Gated approval: CodeRabbit posts a "Request changes" review and only flips to
+  # "Approved" once its comments are resolved, the latest commit is reviewed, and no
+  # pre-merge check is failing. Pairs with the Security Gate (mode: error) so a
+  # security finding withholds approval instead of merely commenting.
+  request_changes_workflow: true
   high_level_summary: true
   changed_files_summary: true
   sequence_diagrams: true
