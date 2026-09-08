@@ -18,10 +18,21 @@ export const MAX_SUBTOTAL_CENTS = 100_000_000_000;
 /**
  * Compute a price quote. Money is integer cents; the 10%-off bulk discount (for
  * orders of more than five items) is rounded once, at the boundary, in cents.
- * Callers must reject subtotals above {@link MAX_SUBTOTAL_CENTS} before calling.
+ *
+ * Rejects subtotals above {@link MAX_SUBTOTAL_CENTS} so the discount arithmetic
+ * cannot exceed the safe-integer range. Enforcing the bound here (rather than
+ * documenting it as a caller responsibility) closes an overflow gap on the
+ * release line.
+ *
+ * @throws RangeError when `subtotalCents` is negative or exceeds the bound.
  */
 export function quote(input: QuoteInput): PriceQuote {
   const { subtotalCents, itemCount } = input;
+  if (subtotalCents < 0 || subtotalCents > MAX_SUBTOTAL_CENTS) {
+    throw new RangeError(
+      `subtotalCents must be between 0 and ${MAX_SUBTOTAL_CENTS}`,
+    );
+  }
   const totalCents =
     itemCount > 5 ? Math.round((subtotalCents * 90) / 100) : subtotalCents;
   return { subtotalCents, itemCount, totalCents };
