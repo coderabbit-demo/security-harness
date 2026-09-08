@@ -28,6 +28,28 @@ reviews:
   suggested_reviewers: true
   poem: false
 
+  # Risk taxonomy: CodeRabbit suggests (and applies) one risk label per PR from prose
+  # rules; the mutually-exclusive group prevents a PR being tagged more than one risk.
+  auto_apply_labels: true
+  labeling_instructions:
+    - label: "risk:high"
+      instructions: >-
+        Apply when the PR touches a security-sensitive surface. Mirror the Security Gate's
+        scope: authentication, authorization, secrets or session tokens, weak or predictable
+        tokens, plaintext handling of passwords, SSNs, or payment/card/PII data, command
+        injection, SSRF, path traversal, cryptography, IAM, or insecure infrastructure.
+    - label: "risk:medium"
+      instructions: >-
+        Apply for application-logic changes with moderate blast radius (pricing, bookings,
+        service-layer behavior) that are NOT security-sensitive.
+    - label: "risk:low"
+      instructions: >-
+        Fallback for everything else: docs, tests, configuration, comments, or low-impact
+        changes with no security or moderate-blast-radius concern. Apply whenever neither
+        risk:high nor risk:medium fits, so every PR carries exactly one risk label.
+  mutually_exclusive_groups:
+    risk: ["risk:high", "risk:medium", "risk:low"]
+
   auto_review:
     enabled: true
     auto_incremental_review: true
@@ -88,6 +110,16 @@ reviews:
           predictable session tokens, plaintext storage of passwords, SSNs, or card data,
           SSRF, path traversal, or insecure infrastructure. Do NOT fail on trivial, minor,
           non-security, or purely functional issues.
+      # mutually_exclusive_groups guarantees at MOST one risk label, not at least one. This
+      # error-mode check supplies the missing at-least-one guarantee, so every PR carries
+      # exactly one. It blocks an unlabeled PR from merging once request_changes_workflow is
+      # enabled (repo config) or the check is a required status in branch protection.
+      - name: "Risk Label Present"
+        mode: error
+        instructions: >-
+          Fail when the PR carries none of risk:high, risk:medium, or risk:low. Every PR must
+          end up with exactly one risk label; the labeling_instructions fallback should make
+          this pass automatically, and this check blocks any PR that slips through unlabeled.
 
   finishing_touches:
     docstrings:
