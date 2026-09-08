@@ -29,6 +29,10 @@ reviews:
     enabled: true
     auto_incremental_review: true
     drafts: false
+    # Auto-review PRs opened against maintenance release lines, not just the default
+    # branch. Without this, a PR targeting release/1.4 would not be reviewed on open.
+    base_branches:
+      - "release/.*"
 
   path_filters:
     - "!dist/**"
