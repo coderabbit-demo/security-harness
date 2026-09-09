@@ -111,8 +111,14 @@ export function applyBillingEvent(event: BillingEvent): BillingResult {
     return seen;
   }
   const current = balances.get(event.accountId) ?? 0;
-  const delta = event.type === "invoice.refunded" ? -event.amountCents : event.amountCents;
-  const balanceCents = current + delta;
+  // Map each event type to an explicit balance effect. Only settled invoice
+  // activity moves the balance; subscription.updated is metadata and must not.
+  const deltaByType: Record<BillingEvent["type"], number> = {
+    "invoice.paid": event.amountCents,
+    "invoice.refunded": -event.amountCents,
+    "subscription.updated": 0,
+  };
+  const balanceCents = current + deltaByType[event.type];
   balances.set(event.accountId, balanceCents);
   const result: BillingResult = { accountId: event.accountId, balanceCents };
   processed.set(event.eventId, result);
