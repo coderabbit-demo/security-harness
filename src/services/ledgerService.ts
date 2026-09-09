@@ -11,6 +11,9 @@ export interface LedgerResult {
 
 const DIRECTIONS = new Set<LedgerAdjustment["direction"]>(["credit", "debit"]);
 
+/** Cap on tracked accounts, so an unbounded set of ids cannot exhaust memory. */
+const MAX_TRACKED_ACCOUNTS = 10_000;
+
 /** In-memory account balances, keyed by account id. Demo stand-in for a datastore. */
 const balances = new Map<string, number>();
 
@@ -52,5 +55,14 @@ export function applyAdjustment(adjustment: LedgerAdjustment): LedgerResult {
     throw new RangeError("ledger balance exceeds safe integer range");
   }
   balances.set(adjustment.accountId, balanceCents);
+  // Bound memory: this in-memory ledger is a demo stand-in. Once the map exceeds
+  // its cap, evict the oldest account (Map preserves insertion order) so an
+  // unbounded set of account ids cannot exhaust memory.
+  if (balances.size > MAX_TRACKED_ACCOUNTS) {
+    const oldest = balances.keys().next().value;
+    if (oldest !== undefined) {
+      balances.delete(oldest);
+    }
+  }
   return { accountId: adjustment.accountId, balanceCents };
 }
