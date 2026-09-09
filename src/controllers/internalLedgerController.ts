@@ -16,5 +16,11 @@ export function postLedgerAdjustment(req: Request, res: Response): void {
     return;
   }
 
-  res.json(applyAdjustment(adjustment));
+  const result = applyAdjustment(adjustment);
+  if (!result) {
+    res.status(404).json({ error: "unknown account" });
+    return;
+  }
+
+  res.json(result);
 }

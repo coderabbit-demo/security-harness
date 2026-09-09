@@ -11,11 +11,17 @@ export interface LedgerResult {
 
 const DIRECTIONS = new Set<LedgerAdjustment["direction"]>(["credit", "debit"]);
 
-/** Cap on tracked accounts, so an unbounded set of ids cannot exhaust memory. */
-const MAX_TRACKED_ACCOUNTS = 10_000;
-
-/** In-memory account balances, keyed by account id. Demo stand-in for a datastore. */
-const balances = new Map<string, number>();
+/**
+ * Known accounts this internal service manages, with their current balance in
+ * cents. A real deployment loads these from the accounts service; they are seeded
+ * here as a demo stand-in. The set is fixed, so it neither grows without bound nor
+ * evicts a live balance.
+ */
+const balances = new Map<string, number>([
+  ["acct_1001", 0],
+  ["acct_1002", 0],
+  ["acct_1003", 0],
+]);
 
 /**
  * Parse and validate an untrusted ledger payload. Returns a well-formed
@@ -45,24 +51,19 @@ export function parseAdjustment(raw: unknown): LedgerAdjustment | null {
 }
 
 /**
- * Apply a ledger adjustment to the named account and return its new balance.
+ * Apply a ledger adjustment to the named account and return its new balance, or
+ * null when the account is not one this service manages.
  */
-export function applyAdjustment(adjustment: LedgerAdjustment): LedgerResult {
-  const current = balances.get(adjustment.accountId) ?? 0;
+export function applyAdjustment(adjustment: LedgerAdjustment): LedgerResult | null {
+  const current = balances.get(adjustment.accountId);
+  if (current === undefined) {
+    return null;
+  }
   const delta = adjustment.direction === "debit" ? -adjustment.amountCents : adjustment.amountCents;
   const balanceCents = current + delta;
   if (!Number.isSafeInteger(balanceCents)) {
     throw new RangeError("ledger balance exceeds safe integer range");
   }
   balances.set(adjustment.accountId, balanceCents);
-  // Bound memory: this in-memory ledger is a demo stand-in. Once the map exceeds
-  // its cap, evict the oldest account (Map preserves insertion order) so an
-  // unbounded set of account ids cannot exhaust memory.
-  if (balances.size > MAX_TRACKED_ACCOUNTS) {
-    const oldest = balances.keys().next().value;
-    if (oldest !== undefined) {
-      balances.delete(oldest);
-    }
-  }
   return { accountId: adjustment.accountId, balanceCents };
 }
