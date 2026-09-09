@@ -1,12 +1,14 @@
-import express, { Express } from "express";
+import express, { Express, NextFunction, Request, Response } from "express";
 import { healthRouter } from "./routes/health";
 import { pricingRouter } from "./routes/pricing";
 import { webhooksRouter } from "./routes/webhooks/billing";
+import { internalRouter } from "./routes/internal/ledger";
 
 /**
  * Wire the Express app. Requests flow route -> controller -> service. Mounts the
- * health routes at the root, the pricing API under /api/pricing, and the billing
- * webhooks under /api/webhooks.
+ * health routes at the root, the pricing API under /api/pricing, the billing
+ * webhooks under /api/webhooks, and the internal service-to-service API under
+ * /internal.
  */
 export function createApp(): Express {
   const app = express();
@@ -16,5 +18,15 @@ export function createApp(): Express {
   app.use(express.json());
   app.use("/", healthRouter);
   app.use("/api/pricing", pricingRouter);
+  app.use("/internal", internalRouter);
+
+  // Terminal error handler: return a generic message to the client and keep the
+  // exception detail (including stack traces) server-side, so an uncaught error
+  // never reaches Express's default handler and leaks internals to the requester.
+  app.use((err: Error, _req: Request, res: Response, _next: NextFunction) => {
+    console.error("unhandled error", { message: err.message, stack: err.stack });
+    res.status(500).json({ error: "internal server error" });
+  });
+
   return app;
 }
