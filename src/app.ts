@@ -3,6 +3,7 @@ import { healthRouter } from "./routes/health";
 import { pricingRouter } from "./routes/pricing";
 import { webhooksRouter } from "./routes/webhooks/billing";
 import { accountsRouter } from "./routes/accounts";
+import { portalRouter } from "./routes/portal";
 
 /**
  * Wire the Express app. Requests flow route -> controller -> service. Mounts the
@@ -18,7 +19,7 @@ export function createApp(): Express {
   app.use("/", healthRouter);
   app.use("/api/pricing", pricingRouter);
   app.use("/api/accounts", accountsRouter);
-
+  app.use("/api/portal", portalRouter);
   // Terminal error handler: return a generic message to the client and keep the
   // exception detail (including stack traces) server-side, so an uncaught error
   // never reaches Express's default handler and leaks internals to the requester.
