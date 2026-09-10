@@ -12,10 +12,10 @@ export interface LedgerResult {
 const DIRECTIONS = new Set<LedgerAdjustment["direction"]>(["credit", "debit"]);
 
 /**
- * Known accounts this internal service manages, with their current balance in
- * cents. A real deployment loads these from the accounts service; they are seeded
- * here as a demo stand-in. The set is fixed, so it neither grows without bound nor
- * evicts a live balance.
+ * Known accounts this service manages, with their current balance in cents. A
+ * real deployment loads these from the accounts service; they are seeded here as
+ * a demo stand-in. The set is fixed, so it neither grows without bound nor evicts
+ * a live balance.
  */
 const balances = new Map<string, number>([
   ["acct_1001", 0],
@@ -24,18 +24,20 @@ const balances = new Map<string, number>([
 ]);
 
 /**
- * Parse and validate an untrusted ledger payload. Returns a well-formed
- * LedgerAdjustment, or null when any field is missing, mistyped, or out of range
- * so the caller can answer HTTP 400 without the service ever seeing bad input.
+ * Validate an untrusted adjustment. `accountId` comes from the route, the amount
+ * and direction from the request body. Returns a well-formed LedgerAdjustment, or
+ * null when any field is missing, mistyped, or out of range so the caller can
+ * answer HTTP 400 without the service ever seeing bad input.
  */
-export function parseAdjustment(raw: unknown): LedgerAdjustment | null {
-  if (typeof raw !== "object" || raw === null) {
+export function parseAdjustment(accountId: string, body: unknown): LedgerAdjustment | null {
+  if (typeof accountId !== "string" || accountId.length === 0) {
     return null;
   }
-  const { accountId, amountCents, direction } = raw as Record<string, unknown>;
+  if (typeof body !== "object" || body === null) {
+    return null;
+  }
+  const { amountCents, direction } = body as Record<string, unknown>;
   if (
-    typeof accountId !== "string" ||
-    accountId.length === 0 ||
     !Number.isSafeInteger(amountCents) ||
     (amountCents as number) < 0 ||
     typeof direction !== "string" ||
