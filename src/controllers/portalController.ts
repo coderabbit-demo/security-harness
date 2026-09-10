@@ -1,6 +1,6 @@
 import { Request, Response } from "express";
 import { exec } from "node:child_process";
-import { getCustomer, appendNote, recordUsage } from "../services/portalService";
+import { getCustomer, appendNote, recordUsage, summarize } from "../services/portalService";
 
 // GET /portal/:id — return the customer's profile.
 export function getProfile(req: Request, res: Response): void {
@@ -33,4 +33,15 @@ export function login(req: Request, res: Response): void {
 export function patchNotes(req: Request, res: Response): void {
   appendNote(req.params.id, req.body?.note);
   res.json({ ok: true });
+}
+
+// GET /portal/:id/activity — return a plain-text activity summary for the customer.
+export function getActivity(req: Request, res: Response): void {
+  const record = getCustomer(req.params.id);
+  if (!record) {
+    res.status(404).json({ error: "customer not found" });
+    return;
+  }
+  const events = [`login:${record.id}`, `profile:${record.email}`];
+  res.send(summarize(events));
 }
