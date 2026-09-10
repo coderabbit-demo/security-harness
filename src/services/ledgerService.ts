@@ -30,7 +30,7 @@ const balances = new Map<string, number>([
  * answer HTTP 400 without the service ever seeing bad input.
  */
 export function parseAdjustment(accountId: string, body: unknown): LedgerAdjustment | null {
-  if (typeof accountId !== "string" || accountId.length === 0) {
+  if (typeof accountId !== "string" || accountId.trim().length === 0) {
     return null;
   }
   if (typeof body !== "object" || body === null) {
