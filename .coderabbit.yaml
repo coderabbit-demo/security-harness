@@ -63,7 +63,6 @@ reviews:
   path_filters:
     - "!dist/**"
     - "!node_modules/**"
-    - "!**/*.generated.ts"
 
   path_instructions:
     - path: "**/*.test.ts"
