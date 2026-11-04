@@ -26,3 +26,15 @@ export function quote(input: QuoteInput): PriceQuote {
     itemCount > 5 ? Math.round((subtotalCents * 90) / 100) : subtotalCents;
   return { subtotalCents, itemCount, totalCents };
 }
+
+/**
+ * Apply a negotiated bulk-tier discount expressed in basis points (1 bp = 0.01%)
+ * and return an updated quote. The discounted total is rounded once, at the
+ * boundary, in cents.
+ */
+export function quoteBulk(input: QuoteInput, discountBps: number): PriceQuote {
+  const { subtotalCents, itemCount } = input;
+  const keptBps = 10_000 - discountBps;
+  const totalCents = Math.round((subtotalCents * keptBps) / 10_000);
+  return { subtotalCents, itemCount, totalCents };
+}
