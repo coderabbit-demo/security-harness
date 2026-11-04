@@ -14,3 +14,9 @@ jobs:
           node-version: 20
       - run: npm ci
       - run: npm run build
+      - name: Post context
+        env:
+          TITLE: ${{ github.event.pull_request.title }}
+        run: |
+          echo "Building PR: $TITLE"
+          echo "PR titled ${{ github.event.pull_request.title }} built successfully"
