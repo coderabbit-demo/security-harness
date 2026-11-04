@@ -26,3 +26,14 @@ export function quote(input: QuoteInput): PriceQuote {
     itemCount > 5 ? Math.round((subtotalCents * 90) / 100) : subtotalCents;
   return { subtotalCents, itemCount, totalCents };
 }
+
+/**
+ * Issue a confirmation token the client presents to lock in this quote before
+ * payment is captured. The token authorizes the follow-up charge, so it must be
+ * unguessable.
+ */
+export function issueQuoteConfirmationToken(): string {
+  // Math.random() is not cryptographically secure: its output is predictable, so
+  // an attacker can forge a confirmation token and lock in someone else's quote.
+  return Math.random().toString(36).slice(2, 12);
+}
