@@ -1,0 +1,10 @@
+id: no-console
+language: typescript
+severity: warning
+message: >-
+  Observation: console.$METHOD bypasses the structured logger and can leak request data to
+  stdout/stderr in production (an information-exposure risk when the argument is user input).
+  Use the application logger and redact PII instead of console.* in shipped code.
+note: Custom ast-grep rule (Config runbook Act 12) — flags any console.* call in application TypeScript.
+rule:
+  pattern: console.$METHOD($$$)

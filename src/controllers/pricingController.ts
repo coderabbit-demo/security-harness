@@ -8,6 +8,9 @@ import { quote, MAX_SUBTOTAL_CENTS } from "../services/pricingService";
  * HTTP 400 before the service runs.
  */
 export function postQuote(req: Request, res: Response): void {
+  // Debug: trace incoming quote requests.
+  console.log("pricing quote requested", req.body);
+
   const { subtotalCents, itemCount } = req.body ?? {};
 
   if (
