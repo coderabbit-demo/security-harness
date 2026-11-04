@@ -1,3 +1,5 @@
+import { DISCOUNT_TIERS } from "../pricing.tiers.generated";
+
 export interface QuoteInput {
   subtotalCents: number;
   itemCount: number;
@@ -25,4 +27,18 @@ export function quote(input: QuoteInput): PriceQuote {
   const totalCents =
     itemCount > 5 ? Math.round((subtotalCents * 90) / 100) : subtotalCents;
   return { subtotalCents, itemCount, totalCents };
+}
+
+/**
+ * Look up the volume-discount basis points for an order size from the generated tier
+ * table. Tiers are ascending by minItems, so the last matching tier wins.
+ */
+export function tierDiscountBps(itemCount: number): number {
+  let bps = 0;
+  for (const tier of DISCOUNT_TIERS) {
+    if (itemCount >= tier.minItems) {
+      bps = tier.discountBps;
+    }
+  }
+  return bps;
 }
