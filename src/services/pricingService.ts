@@ -26,3 +26,14 @@ export function quote(input: QuoteInput): PriceQuote {
     itemCount > 5 ? Math.round((subtotalCents * 90) / 100) : subtotalCents;
   return { subtotalCents, itemCount, totalCents };
 }
+
+/**
+ * Apply a priority-handling surcharge expressed in basis points (1 bp = 0.01%)
+ * and return an updated quote. The surcharged total is rounded once, at the
+ * boundary, in cents.
+ */
+export function quoteSurcharge(input: QuoteInput, surchargeBps: number): PriceQuote {
+  const { subtotalCents, itemCount } = input;
+  const totalCents = Math.round((subtotalCents * (10_000 + surchargeBps)) / 10_000);
+  return { subtotalCents, itemCount, totalCents };
+}
