@@ -13,10 +13,14 @@ tone_instructions: >-
 
 reviews:
   profile: chill
-  # Gated approval: CodeRabbit posts a "Request changes" review and only approves once
-  # its comments are resolved, the latest commit is reviewed, and no pre-merge check is
-  # failing. Turns CodeRabbit into a blocking reviewer instead of a commenter.
-  request_changes_workflow: true
+  # Gated approval: CodeRabbit requests changes for blocking findings and approves only
+  # when its threads are resolved, the latest commit is reviewed, pre-merge checks pass,
+  # and merge risk is low or below. Risk above the limit withholds approval; it never
+  # requests changes.
+  auto_approvals:
+    enabled: true
+    max_merge_risk: low
+    max_security_risk: low
   high_level_summary: true
   changed_files_summary: true
   sequence_diagrams: true
@@ -112,7 +116,7 @@ reviews:
           non-security, or purely functional issues.
       # mutually_exclusive_groups guarantees at MOST one risk label, not at least one. This
       # error-mode check supplies the missing at-least-one guarantee, so every PR carries
-      # exactly one. It blocks an unlabeled PR from merging once request_changes_workflow is
+      # exactly one. It blocks an unlabeled PR from merging once auto_approvals is
       # enabled (repo config) or the check is a required status in branch protection.
       - name: "Risk Label Present"
         mode: error
