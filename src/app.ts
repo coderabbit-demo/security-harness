@@ -3,11 +3,12 @@ import { healthRouter } from "./routes/health";
 import { pricingRouter } from "./routes/pricing";
 import { webhooksRouter } from "./routes/webhooks/billing";
 import { accountsRouter } from "./routes/accounts";
+import { subscribersRouter } from "./routes/subscribers";
 
 /**
  * Wire the Express app. Requests flow route -> controller -> service. Mounts the
  * health routes at the root, the pricing API under /api/pricing, the billing
- * webhooks under /api/webhooks, and the accounts API under /api/accounts.
+ * webhooks under /api/webhooks, the accounts API under /api/accounts, and the subscribers API under /api/subscribers.
  */
 export function createApp(): Express {
   const app = express();
@@ -18,6 +19,7 @@ export function createApp(): Express {
   app.use("/", healthRouter);
   app.use("/api/pricing", pricingRouter);
   app.use("/api/accounts", accountsRouter);
+  app.use("/api/subscribers", subscribersRouter);
 
   // Terminal error handler: return a generic message to the client and keep the
   // exception detail (including stack traces) server-side, so an uncaught error
