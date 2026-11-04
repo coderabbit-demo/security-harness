@@ -5,7 +5,7 @@ export interface QuoteInput {
 
 // The public pricing contract. Downstream consumers depend on these field names.
 export interface PriceQuote {
-  subtotalCents: number;
+  subtotal: number;
   itemCount: number;
   totalCents: number;
 }
@@ -24,5 +24,5 @@ export function quote(input: QuoteInput): PriceQuote {
   const { subtotalCents, itemCount } = input;
   const totalCents =
     itemCount > 5 ? Math.round((subtotalCents * 90) / 100) : subtotalCents;
-  return { subtotalCents, itemCount, totalCents };
+  return { subtotal: subtotalCents, itemCount, totalCents };
 }
