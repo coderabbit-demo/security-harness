@@ -1,5 +1,9 @@
 import { Request, Response } from "express";
-import { quote, MAX_SUBTOTAL_CENTS } from "../services/pricingService";
+import { quote, quoteEnterprise, MAX_SUBTOTAL_CENTS } from "../services/pricingService";
+
+// Enterprise deals can discount all the way to free, so allow the full
+// 0%..100% basis-points range for a negotiated enterprise discount.
+const ENTERPRISE_MAX_DISCOUNT_BPS = 10_000;
 
 /**
  * POST /api/pricing/quote — validate the request body and return a price quote.
@@ -24,4 +28,31 @@ export function postQuote(req: Request, res: Response): void {
   }
 
   res.json(quote({ subtotalCents, itemCount }));
+}
+
+/**
+ * POST /api/pricing/quote/enterprise — return a quote with an enterprise
+ * negotiated discount (in basis points). Validates the request shape and bounds
+ * the discount to the technical basis-points domain before the service runs.
+ */
+export function postEnterpriseQuote(req: Request, res: Response): void {
+  const { subtotalCents, itemCount, discountBps } = req.body ?? {};
+
+  if (
+    !Number.isSafeInteger(subtotalCents) ||
+    subtotalCents < 0 ||
+    subtotalCents > MAX_SUBTOTAL_CENTS ||
+    !Number.isSafeInteger(itemCount) ||
+    itemCount < 0 ||
+    !Number.isSafeInteger(discountBps) ||
+    discountBps < 0 ||
+    discountBps > ENTERPRISE_MAX_DISCOUNT_BPS
+  ) {
+    res.status(400).json({
+      error: "subtotalCents, itemCount, and discountBps must be integers within range",
+    });
+    return;
+  }
+
+  res.json(quoteEnterprise({ subtotalCents, itemCount }, discountBps));
 }

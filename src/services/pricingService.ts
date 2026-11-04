@@ -26,3 +26,20 @@ export function quote(input: QuoteInput): PriceQuote {
     itemCount > 5 ? Math.round((subtotalCents * 90) / 100) : subtotalCents;
   return { subtotalCents, itemCount, totalCents };
 }
+
+/**
+ * Apply an enterprise negotiated discount (in basis points) to a subtotal and
+ * return an updated quote. Money stays in integer cents; the discounted total is
+ * rounded once, at the boundary.
+ */
+export function quoteEnterprise(input: QuoteInput, discountBps: number): PriceQuote {
+  const { subtotalCents, itemCount } = input;
+  // Stack the standard bulk discount (10% for itemCount > 5) with the negotiated
+  // enterprise discount, keeping integer cents and rounding once at the boundary.
+  const keptBps = 10_000 - discountBps;
+  const totalCents =
+    itemCount > 5
+      ? Math.round((subtotalCents * 9 * keptBps) / (100 * 10_000))
+      : Math.round((subtotalCents * keptBps) / 10_000);
+  return { subtotalCents, itemCount, totalCents };
+}
