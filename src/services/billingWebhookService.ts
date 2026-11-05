@@ -10,6 +10,16 @@ export interface BillingEvent {
   amountCents: number;
 }
 
+export interface BillingHistoryEvent {
+  eventId: string;
+  accountId: string;
+  sequence: number;
+  recordedAt: string;
+  type: "invoice.paid" | "invoice.refunded";
+  amountCents: number;
+  deltaCents: number;
+}
+
 export interface BillingResult {
   accountId: string;
   balanceCents: number;
@@ -26,6 +36,9 @@ const balances = new Map<string, number>();
 
 /** Results of events already applied, keyed by provider event id, for idempotency. */
 const processed = new Map<string, BillingResult>();
+
+/** Applied balance-affecting billing events per account, oldest first. */
+const history = new Map<string, BillingHistoryEvent[]>();
 
 /**
  * Parse and validate an untrusted billing payload. Returns a well-formed
@@ -122,5 +135,25 @@ export function applyBillingEvent(event: BillingEvent): BillingResult {
   balances.set(event.accountId, balanceCents);
   const result: BillingResult = { accountId: event.accountId, balanceCents };
   processed.set(event.eventId, result);
+
+  if (event.type !== "subscription.updated") {
+    const events = history.get(event.accountId) ?? [];
+    events.push({
+      eventId: event.eventId,
+      accountId: event.accountId,
+      sequence: events.length + 1,
+      recordedAt: new Date().toISOString(),
+      type: event.type,
+      amountCents: event.amountCents,
+      deltaCents: deltaByType[event.type],
+    });
+    history.set(event.accountId, events);
+  }
+
   return result;
+}
+
+/** Return copies of the applied billing events for an account, oldest first. */
+export function getEventsForAccount(accountId: string): BillingHistoryEvent[] {
+  return (history.get(accountId) ?? []).map((event) => ({ ...event }));
 }
