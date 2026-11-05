@@ -1,3 +1,5 @@
+import { createHash, timingSafeEqual } from "node:crypto";
+
 export interface LedgerAdjustment {
   accountId: string;
   amountCents: number;
@@ -22,6 +24,34 @@ const balances = new Map<string, number>([
   ["acct_1002", 0],
   ["acct_1003", 0],
 ]);
+
+/** Authenticate a bearer credential scoped to the account in the route. */
+export function authorizeLedgerAccount(accountId: string, authorization: string | undefined): boolean {
+  const token = /^Bearer ([A-Za-z0-9_-]{43})$/i.exec(authorization ?? "")?.[1];
+  if (!token) {
+    return false;
+  }
+
+  let hashes: unknown;
+  try {
+    hashes = JSON.parse(process.env.LEDGER_ACCOUNT_TOKEN_HASHES ?? "");
+  } catch {
+    return false;
+  }
+  if (typeof hashes !== "object" || hashes === null || Array.isArray(hashes)) {
+    return false;
+  }
+
+  const accountHash = Object.prototype.hasOwnProperty.call(hashes, accountId)
+    ? (hashes as Record<string, unknown>)[accountId]
+    : undefined;
+  if (typeof accountHash !== "string" || !/^[a-f0-9]{64}$/.test(accountHash)) {
+    return false;
+  }
+
+  const providedHash = createHash("sha256").update(token).digest();
+  return timingSafeEqual(Buffer.from(accountHash, "hex"), providedHash);
+}
 
 /**
  * Validate an untrusted adjustment. `accountId` comes from the route, the amount
