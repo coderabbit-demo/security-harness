@@ -3,6 +3,11 @@ import { buildStatement, Statement } from "../services/statementService";
 import { saveExport, readExport, isValidExportFilename } from "../services/exportStore";
 import { toCsv } from "../lib/csv";
 
+/** Both handlers must derive the same valid basename for every accepted account ID. */
+function defaultExportFilename(accountId: string): string {
+  return `statement-${accountId.replace(/[^A-Za-z0-9_.-]/g, "_")}.csv`;
+}
+
 /**
  * Lay a statement out as CSV rows: an opening row carrying the opening balance
  * first, one row per line, and a closing row carrying the closing balance last.
@@ -61,7 +66,7 @@ export async function getStatement(req: Request, res: Response, next: NextFuncti
     const name =
       typeof filename === "string" && filename.length > 0
         ? filename
-        : `statement-${req.params.accountId}.csv`;
+        : defaultExportFilename(req.params.accountId);
     if (!isValidExportFilename(name) || (filename !== undefined && typeof filename !== "string")) {
       res.status(400).json({ error: "invalid export filename" });
       return;
@@ -90,7 +95,7 @@ export async function getStatementExport(
     const name =
       typeof filename === "string" && filename.length > 0
         ? filename
-        : `statement-${req.params.accountId}.csv`;
+        : defaultExportFilename(req.params.accountId);
     if (!isValidExportFilename(name) || (filename !== undefined && typeof filename !== "string")) {
       res.status(400).json({ error: "invalid export filename" });
       return;

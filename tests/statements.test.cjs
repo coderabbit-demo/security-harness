@@ -57,7 +57,7 @@ test('HTTP exports isolate accounts and reject unsafe filenames before storage a
   process.chdir(directory);
   const server = createApp().listen(0, '127.0.0.1');
   await new Promise(resolve => server.once('listening', resolve));
-  const request = (account, suffix) => fetch(`http://127.0.0.1:${server.address().port}/api/accounts/${account}/statement${suffix}`, {
+  const request = (account, suffix) => fetch(`http://127.0.0.1:${server.address().port}/api/accounts/${encodeURIComponent(account)}/statement${suffix}`, {
     headers: { 'X-Account-Id': account },
   });
   const save = (account, name) => request(account, `?from=2026-01-01&to=2026-01-01&format=csv&filename=${encodeURIComponent(name)}`);
@@ -70,6 +70,19 @@ test('HTTP exports isolate accounts and reject unsafe filenames before storage a
       await assert.rejects(store.readExport('acct_1001', name), /invalid export filename/);
     }
     assert.deepEqual(await readdir(directory), []);
+    for (const account of ['acct_1001', 'acct:1001', 'acct/1001', 'acct\\1001', 'acct"1001', 'x'.repeat(64)]) {
+      const generated = await request(account, '?from=2026-01-01&to=2026-01-01&format=csv');
+      assert.equal(generated.status, 200);
+      const expected = `statement-${account.replace(/[^A-Za-z0-9_.-]/g, '_')}.csv`;
+      assert.equal(generated.headers.get('content-disposition'), `attachment; filename=${expected}`);
+      const contents = await generated.text();
+      const downloaded = await request(account, '/exports');
+      assert.equal(downloaded.status, 200);
+      assert.equal(downloaded.headers.get('content-disposition'), generated.headers.get('content-disposition'));
+      assert.equal(await downloaded.text(), contents);
+      assert.equal((await save(account, 'custom.csv')).status, 200);
+      assert.equal((await read(account, 'custom.csv')).headers.get('content-disposition'), 'attachment; filename=custom.csv');
+    }
     const own = await save('acct_1001', 'shared.csv');
     assert.equal(own.status, 200);
     const csv = await own.text();
