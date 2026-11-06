@@ -1,6 +1,6 @@
 import { NextFunction, Request, Response } from "express";
 import { buildStatement, Statement } from "../services/statementService";
-import { saveExport, readExport } from "../services/exportStore";
+import { saveExport, readExport, isValidExportFilename } from "../services/exportStore";
 import { toCsv } from "../lib/csv";
 
 /**
@@ -9,9 +9,9 @@ import { toCsv } from "../lib/csv";
  * Columns are row_type, event_id, recorded_at, type, reference, memo, delta_cents,
  * balance_cents.
  */
-function statementRows(statement: Statement): string[][] {
-  const rows: string[][] = [
-    ["opening", "", "", "", "", "", "", String(statement.openingBalanceCents)],
+function statementRows(statement: Statement): (string | number)[][] {
+  const rows: (string | number)[][] = [
+    ["opening", "", "", "", "", "", "", statement.openingBalanceCents],
   ];
   for (const line of statement.lines) {
     rows.push([
@@ -21,11 +21,11 @@ function statementRows(statement: Statement): string[][] {
       line.type,
       line.reference,
       line.memo ?? "",
-      String(line.deltaCents),
-      String(line.balanceCents),
+      line.deltaCents,
+      line.balanceCents,
     ]);
   }
-  rows.push(["closing", "", "", "", "", "", "", String(statement.closingBalanceCents)]);
+  rows.push(["closing", "", "", "", "", "", "", statement.closingBalanceCents]);
   return rows;
 }
 
@@ -62,8 +62,12 @@ export async function getStatement(req: Request, res: Response, next: NextFuncti
       typeof filename === "string" && filename.length > 0
         ? filename
         : `statement-${req.params.accountId}.csv`;
+    if (!isValidExportFilename(name) || (filename !== undefined && typeof filename !== "string")) {
+      res.status(400).json({ error: "invalid export filename" });
+      return;
+    }
     const csv = toCsv(statementRows(statement));
-    await saveExport(name, csv);
+    await saveExport(req.params.accountId, name, csv);
     res.setHeader("Content-Type", "text/csv; charset=utf-8");
     res.setHeader("Content-Disposition", `attachment; filename=${name}`);
     res.send(csv);
@@ -87,7 +91,11 @@ export async function getStatementExport(
       typeof filename === "string" && filename.length > 0
         ? filename
         : `statement-${req.params.accountId}.csv`;
-    const csv = await readExport(name);
+    if (!isValidExportFilename(name) || (filename !== undefined && typeof filename !== "string")) {
+      res.status(400).json({ error: "invalid export filename" });
+      return;
+    }
+    const csv = await readExport(req.params.accountId, name);
     if (csv === null) {
       res.status(404).json({ error: "export not found" });
       return;

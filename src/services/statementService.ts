@@ -40,6 +40,8 @@ interface Entry {
 const LEDGER_SOURCE = 0;
 const BILLING_SOURCE = 1;
 const DAY_MS = 24 * 60 * 60 * 1000;
+// Bound daily allocations while allowing a full leap year.
+const MAX_STATEMENT_DAYS = 366;
 const HAS_TIME = /\d:\d/;
 
 function addCents(balanceCents: number, deltaCents: number): number {
@@ -54,7 +56,7 @@ function addCents(balanceCents: number, deltaCents: number): number {
  * Build the statement for an account from `from` through `to`. A `to` without a
  * time covers that whole day. Merges ledger adjustments and billing events in
  * recorded order, ledger first on a timestamp tie. Returns null when either date
- * does not parse.
+ * does not parse, the range is reversed, or the effective window exceeds 366 days.
  */
 export function buildStatement(accountId: string, from: string, to: string): Statement | null {
   const fromTime = new Date(from).getTime();
@@ -63,6 +65,10 @@ export function buildStatement(accountId: string, from: string, to: string): Sta
     return null;
   }
   const toTime = HAS_TIME.test(to) ? parsedTo : parsedTo + DAY_MS;
+
+  if (parsedTo < fromTime || toTime - fromTime > MAX_STATEMENT_DAYS * DAY_MS) {
+    return null;
+  }
 
   const entries: Entry[] = [
     ...getAdjustments(accountId).map((event) => ({
@@ -114,7 +120,7 @@ export function buildStatement(accountId: string, from: string, to: string): Sta
   const dailyBalances: StatementDailyBalance[] = [];
   let dayBalance = openingBalanceCents;
   let cursor = 0;
-  for (let dayStart = fromTime; dayStart < toTime; dayStart += DAY_MS) {
+  for (let dayStart = Math.floor(fromTime / DAY_MS) * DAY_MS; fromTime < toTime && dayStart < toTime; dayStart += DAY_MS) {
     const dayEnd = dayStart + DAY_MS;
     while (cursor < rangeEntries.length && rangeEntries[cursor].time < dayEnd) {
       dayBalance = addCents(dayBalance, rangeEntries[cursor].deltaCents);
@@ -132,6 +138,6 @@ export function buildStatement(accountId: string, from: string, to: string): Sta
     lines,
     dailyBalances,
   };
-  console.info("statement generated", JSON.stringify(statement));
+  console.info("statement generated", { lineCount: lines.length });
   return statement;
 }
